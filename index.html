@@ -98,10 +98,8 @@
                 <option value="1969781180">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
             </select>
             
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="studentName" placeholder="Họ và Tên học viên" class="form-control" style="flex: 2; text-transform: uppercase;">
-                <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control" style="flex: 1.5;">
-            </div>
+                       <input type="text" id="studentName" placeholder="Họ và Tên học viên" class="form-control" style="text-transform: uppercase;">
+            <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control">
 
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="khoaThi" value="Tháng 4/2026" class="form-control" style="flex: 1.5; background: #eee; font-weight: bold;" readonly>
@@ -110,12 +108,13 @@
 
             <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:10px;">
                 <input type="checkbox" id="modeToggle" style="width:20px; height:20px;">
-                <label for="modeToggle" style="cursor:pointer; font-weight: 600;">Chế độ Ôn tập (Hiện giải thích)</label>
+                <label for="modeToggle" style="cursor:pointer; font-weight: 600;">Chế độ Ôn tập</label>
             </div>
 
             <button class="btn-start" id="btnStart" onclick="validateAndStart()">VÀO THI NGAY ➔</button>
         </div>
     </div>
+
 
     <div id="quiz-screen">
         <div id="quiz-content"></div>
