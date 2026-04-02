@@ -231,7 +231,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
             const hasAns = studentAnswers.some(a => a.qIndex === i);
             const active = i === currentQuestionIndex ? 'border:3px solid var(--btn-orange);' : '';
             const bg = hasAns ? 'background:var(--caee-blue); color:white;' : 'background:white;';
-            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; ${bg} ${active}">${i+1}</div>`;
+            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1); ${bg} ${active}">${i+1}</div>`;
         });
     }
 
@@ -239,34 +239,47 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
         timerInterval = setInterval(() => {
             timeLeft--;
             let m = Math.floor(timeLeft/60), s = timeLeft%60;
-            document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
+            const display = document.getElementById('timer');
+            display.innerText = `${m}:${s<10?'0':''}${s}`;
             if(timeLeft <= 0) submitQuiz(true);
         }, 1000);
     }
 
     async function submitQuiz(auto = false) {
-        if(isSubmitted) return;
-        if(!auto && !confirm("Nộp bài?")) return;
-        isSubmitted = true; clearInterval(timerInterval);
+        if (isSubmitted) return;
+        if (!auto && !confirm("Bạn có chắc chắn muốn nộp bài sát hạch?")) return;
+        
+        isSubmitted = true;
+        clearInterval(timerInterval);
 
         let score = 0;
+        const labels = ['A', 'B', 'C', 'D'];
         selectedQuestions.forEach((q, i) => {
             const ans = studentAnswers.find(a => a.qIndex === i);
-            if(ans && ['A','B','C','D'][q.options.indexOf(ans.selected)] === q.answer) score++;
+            if (ans) {
+                const idx = q.options.indexOf(ans.selected);
+                if (idx !== -1 && labels[idx] === q.answer) score++;
+            }
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        document.getElementById('res-score').innerText = score + "/30";
-        document.getElementById('res-badge').innerText = status;
-        document.getElementById('res-badge').style.backgroundColor = score >= 25 ? "var(--success)" : "var(--danger)";
+        
+        // Cập nhật màn hình kết quả
+        document.getElementById('res-name').innerText = document.getElementById('studentName').value.toUpperCase() + " (" + document.getElementById('studentDOB').value + ")";
+        document.getElementById('res-id').innerText = document.getElementById('examCode').value.toUpperCase();
+        document.getElementById('res-score').innerText = score;
+        const badge = document.getElementById('res-badge');
+        badge.innerText = status;
+        badge.style.backgroundColor = score >= 25 ? "var(--success)" : "var(--danger)";
+        
         document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('caee-header').style.display = 'none';
         document.getElementById('result-screen').style.display = 'flex';
 
-        // Gửi dữ liệu về Google Sheets
+        // Gửi dữ liệu về Google Sheets thông qua Apps Script
         const formData = new URLSearchParams();
-        formData.append('name', document.getElementById('studentName').value.toUpperCase());
-        formData.append('birthDate', document.getElementById('studentDOB').value);
-        formData.append('khoaThi', document.getElementById('khoaThi').value);
+        formData.append('name', document.getElementById('studentName').value + " (" + document.getElementById('studentDOB').value + ")");
+        formData.append('studentID', document.getElementById('examCode').value.toUpperCase());
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
@@ -275,8 +288,16 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
 
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData });
 
-        let c = 10;
-        setInterval(() => { c--; document.getElementById('countdown').innerText = c; if(c<=0) location.reload(); }, 1000);
+        // Đếm ngược tự động tải lại
+        let count = 8;
+        const countInt = setInterval(() => {
+            count--;
+            document.getElementById('countdown').innerText = count;
+            if(count <= 0) {
+                clearInterval(countInt);
+                location.reload();
+            }
+        }, 1000);
     }
 </script>
 </body>
