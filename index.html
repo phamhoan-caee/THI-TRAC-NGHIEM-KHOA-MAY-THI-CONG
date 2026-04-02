@@ -32,7 +32,7 @@
         #start-screen { min-height: 80vh; display: flex; justify-content: center; align-items: center; }
         .welcome-container { background: white; width: 95%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .form-control { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        
+
         .btn-start { 
             background: var(--success); color: white; border: none; width: 100%; padding: 15px; 
             border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;
@@ -42,7 +42,7 @@
 
         #quiz-screen { padding: 20px; display: none; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: auto; }
         #quiz-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 400px; }
-        
+
         .q-image-box { text-align: center; margin: 15px 0; }
         .q-image-box img { max-width: 100%; max-height: 350px; border-radius: 10px; border: 1px solid #ddd; }
 
@@ -86,7 +86,7 @@
                 <option value="798209567">NGHỀ: VẬN HÀNH CẦN TRỤC</option>
                 <option value="1969781180">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
             </select>
-            
+
             <input type="text" id="studentName" placeholder="Họ và Tên học viên" class="form-control" style="text-transform: uppercase;">
             <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control">
 
@@ -126,6 +126,10 @@
     </div>
 
 <script>
+    // --- THAY LINK APPS SCRIPT CỦA THẦY VÀO ĐÂY ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzo4Fu951YqC25r6AXgyww0IOi6NtO4FByfXU6KPKgWsmILxFmyJ2qUiQW5SLVitF8BTQ/exec";
+    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
+
   // Link CSV dùng để lấy câu hỏi (Giữ nguyên link docs.google.com này)
  const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
  // Link Web App dùng để kiểm tra mã và nộp bài
@@ -171,11 +175,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
                     explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
                     image: i["HINH ANH"] || "" 
                 }));
-                
+
                 selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
                 document.getElementById('display-name').innerText = document.getElementById('studentName').value.toUpperCase();
                 document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
-                
+
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('caee-header').style.display = 'flex';
                 document.getElementById('quiz-screen').style.display = 'grid';
@@ -207,7 +211,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
         });
 
         if(isPractice && stored) html += `<div style="background:#fff3cd; padding:10px; border-radius:8px; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
-        
+
         html += `<div style="display:flex; justify-content:space-between; margin-top:20px;">
                     <button class="btn-start" style="width:45%; background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
                     <button class="btn-start" style="width:45%; background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
@@ -231,7 +235,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
             const hasAns = studentAnswers.some(a => a.qIndex === i);
             const active = i === currentQuestionIndex ? 'border:3px solid var(--btn-orange);' : '';
             const bg = hasAns ? 'background:var(--caee-blue); color:white;' : 'background:white;';
-            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1); ${bg} ${active}">${i+1}</div>`;
+            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:40px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-weight:bold; ${bg} ${active}">${i+1}</div>`;
         });
     }
 
@@ -239,47 +243,34 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
         timerInterval = setInterval(() => {
             timeLeft--;
             let m = Math.floor(timeLeft/60), s = timeLeft%60;
-            const display = document.getElementById('timer');
-            display.innerText = `${m}:${s<10?'0':''}${s}`;
+            document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
             if(timeLeft <= 0) submitQuiz(true);
         }, 1000);
     }
 
     async function submitQuiz(auto = false) {
-        if (isSubmitted) return;
-        if (!auto && !confirm("Bạn có chắc chắn muốn nộp bài sát hạch?")) return;
-        
-        isSubmitted = true;
-        clearInterval(timerInterval);
+        if(isSubmitted) return;
+        if(!auto && !confirm("Nộp bài?")) return;
+        isSubmitted = true; clearInterval(timerInterval);
 
         let score = 0;
-        const labels = ['A', 'B', 'C', 'D'];
         selectedQuestions.forEach((q, i) => {
             const ans = studentAnswers.find(a => a.qIndex === i);
-            if (ans) {
-                const idx = q.options.indexOf(ans.selected);
-                if (idx !== -1 && labels[idx] === q.answer) score++;
-            }
+            if(ans && ['A','B','C','D'][q.options.indexOf(ans.selected)] === q.answer) score++;
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        
-        // Cập nhật màn hình kết quả
-        document.getElementById('res-name').innerText = document.getElementById('studentName').value.toUpperCase() + " (" + document.getElementById('studentDOB').value + ")";
-        document.getElementById('res-id').innerText = document.getElementById('examCode').value.toUpperCase();
-        document.getElementById('res-score').innerText = score;
-        const badge = document.getElementById('res-badge');
-        badge.innerText = status;
-        badge.style.backgroundColor = score >= 25 ? "var(--success)" : "var(--danger)";
-        
+        document.getElementById('res-score').innerText = score + "/30";
+        document.getElementById('res-badge').innerText = status;
+        document.getElementById('res-badge').style.backgroundColor = score >= 25 ? "var(--success)" : "var(--danger)";
         document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('caee-header').style.display = 'none';
         document.getElementById('result-screen').style.display = 'flex';
 
-        // Gửi dữ liệu về Google Sheets thông qua Apps Script
+        // Gửi dữ liệu về Google Sheets
         const formData = new URLSearchParams();
-        formData.append('name', document.getElementById('studentName').value + " (" + document.getElementById('studentDOB').value + ")");
-        formData.append('studentID', document.getElementById('examCode').value.toUpperCase());
+        formData.append('name', document.getElementById('studentName').value.toUpperCase());
+        formData.append('birthDate', document.getElementById('studentDOB').value);
+        formData.append('khoaThi', document.getElementById('khoaThi').value);
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
@@ -288,16 +279,8 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
 
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData });
 
-        // Đếm ngược tự động tải lại
-        let count = 8;
-        const countInt = setInterval(() => {
-            count--;
-            document.getElementById('countdown').innerText = count;
-            if(count <= 0) {
-                clearInterval(countInt);
-                location.reload();
-            }
-        }, 1000);
+        let c = 10;
+        setInterval(() => { c--; document.getElementById('countdown').innerText = c; if(c<=0) location.reload(); }, 1000);
     }
 </script>
 </body>
