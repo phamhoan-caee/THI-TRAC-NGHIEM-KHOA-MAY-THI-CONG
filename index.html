@@ -72,6 +72,7 @@
         }
         .status-badge { display: inline-block; padding: 8px 25px; border-radius: 50px; color: white; font-weight: bold; margin-bottom: 20px; }
         .notice-text { background: #fff3cd; color: #856404; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; line-height: 1.4; }
+        .q-image-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
 
         @media (max-width: 900px) { #quiz-screen { grid-template-columns: 1fr; padding-top: 80px; } }
     </style>
@@ -92,18 +93,18 @@
     <div id="start-screen">
         <div class="welcome-container">
             <h2 style="text-align:center; color:var(--caee-blue); margin-bottom: 20px;">HỆ THỐNG SÁT HẠCH - CAEE</h2>
-            <select id="jobType" class="form-control" style="font-weight: bold;">
+            <select id="jobType" class="form-control" style="font-weight: bold;" onchange="preloadQuestions()">
                 <option value="1538604642">NGHỀ: VẬN HÀNH XE NÂNG HÀNG</option>
                 <option value="798209567">NGHỀ: VẬN HÀNH CẦN TRỤC</option>
                 <option value="1969781180">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
             </select>
             
-                       <input type="text" id="studentName" placeholder="Họ và Tên học viên" class="form-control" style="text-transform: uppercase;">
+            <input type="text" id="studentName" placeholder="Họ và Tên học viên" class="form-control" style="text-transform: uppercase;">
             <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control">
 
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="khoaThi" value="Tháng 4/2026" class="form-control" style="flex: 1.5; background: #eee; font-weight: bold;" readonly>
-                <input type="password" id="maThi" placeholder="Mã thi (Mật khẩu)" class="form-control" style="flex: 1;">
+                <input type="password" id="maThi" placeholder="Mã thi" class="form-control" style="flex: 1;">
             </div>
 
             <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:10px;">
@@ -114,7 +115,6 @@
             <button class="btn-start" id="btnStart" onclick="validateAndStart()">VÀO THI NGAY ➔</button>
         </div>
     </div>
-
 
     <div id="quiz-screen">
         <div id="quiz-content"></div>
@@ -130,8 +130,8 @@
     <div id="result-screen">
         <div class="result-card">
             <div class="result-header">KẾT QUẢ SÁT HẠCH</div>
-            <div style="margin-bottom: 20px; font-size: 1.1rem; line-height: 1.6;">
-                Học viên: <b id="res-name" style="color: var(--caee-blue);">---</b><br>
+            <div style="margin-bottom: 20px; font-size: 1.1rem; line-height: 1.6; text-align: left;">
+                Học viên: <b id="res-name" style="color: var(--caee-blue); text-transform: uppercase;">---</b><br>
                 Khóa thi: <b id="res-id">---</b>
             </div>
             <div class="score-circle">
@@ -147,13 +147,32 @@
     </div>
 
 <script>
-    // --- THAY LINK APPS SCRIPT CỦA THẦY VÀO ĐÂY ---
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmpU33n1oc5US8h-XE9F9QdVUsFFwHuFrXS0DlubJaApctwaPMxIw9wIwtGy88xPw4pQ/exec";
+    
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // Chống gian lận
+    // Tải trước dữ liệu ngay khi mở trang
+    window.onload = preloadQuestions;
+
+    function preloadQuestions() {
+        const gid = document.getElementById('jobType').value;
+        Papa.parse(BASE_CSV_URL + gid, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                allQuestions = results.data.filter(i => i.CauHoi).map(i => ({
+                    question: i.CauHoi,
+                    options: [i.A, i.B, i.C, i.D].filter(o => o),
+                    answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
+                    explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
+                    image: i["HINH ANH"] || "" 
+                }));
+                console.log("Đã tải " + allQuestions.length + " câu hỏi.");
+            }
+        });
+    }
+
     window.onblur = () => { 
         if(!isSubmitted && selectedQuestions.length > 0) { 
             cheatCount++; 
@@ -174,35 +193,33 @@
         try {
             const res = await fetch(`${WEB_APP_URL}?action=checkCode&code=${maThi}`);
             const result = await res.json();
-            if(result.isValid) startQuiz();
-            else { alert("Mã thi không đúng!"); btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; }
-        } catch(e) { alert("Lỗi kết nối Server!"); btn.disabled = false; }
+            if(result.isValid) {
+                startQuiz();
+            } else { 
+                alert("Mã thi không đúng!"); 
+                btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; 
+            }
+        } catch(e) { 
+            alert("Lỗi kết nối Server!"); 
+            btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔";
+        }
     }
 
     function startQuiz() {
-        const gid = document.getElementById('jobType').value;
-        Papa.parse(BASE_CSV_URL + gid, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
-                allQuestions = results.data.filter(i => i.CauHoi).map(i => ({
-                    question: i.CauHoi,
-                    options: [i.A, i.B, i.C, i.D].filter(o => o),
-                    answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
-                    explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
-                    image: i["HINH ANH"] || "" 
-                }));
-                
-                selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
-                document.getElementById('display-name').innerText = document.getElementById('studentName').value.toUpperCase();
-                document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
-                
-                document.getElementById('start-screen').style.display = 'none';
-                document.getElementById('caee-header').style.display = 'flex';
-                document.getElementById('quiz-screen').style.display = 'grid';
-                showQuestion(0);
-                startTimer();
-            }
-        });
+        if(allQuestions.length === 0) return alert("Dữ liệu câu hỏi chưa tải xong, vui lòng đợi vài giây!");
+        
+        selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
+        const stName = document.getElementById('studentName').value.toUpperCase();
+        
+        document.getElementById('display-name').innerText = stName;
+        document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('caee-header').style.display = 'flex';
+        document.getElementById('quiz-screen').style.display = 'grid';
+        
+        showQuestion(0);
+        startTimer();
     }
 
     function showQuestion(idx) {
@@ -266,7 +283,7 @@
 
     async function submitQuiz(auto = false) {
         if(isSubmitted) return;
-        if(!auto && !confirm("Nộp bài?")) return;
+        if(!auto && !confirm("Bạn chắc chắn muốn nộp bài?")) return;
         isSubmitted = true; clearInterval(timerInterval);
 
         let score = 0;
@@ -276,17 +293,25 @@
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        document.getElementById('res-score').innerText = score + "/30";
+        const studentName = document.getElementById('studentName').value.toUpperCase();
+        const khoaThi = document.getElementById('khoaThi').value;
+
+        // Cập nhật thông tin lên màn hình kết quả
+        document.getElementById('res-name').innerText = studentName;
+        document.getElementById('res-id').innerText = khoaThi;
+        document.getElementById('res-score').innerText = score;
         document.getElementById('res-badge').innerText = status;
         document.getElementById('res-badge').style.backgroundColor = score >= 25 ? "var(--success)" : "var(--danger)";
+        
         document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('caee-header').style.display = 'none';
         document.getElementById('result-screen').style.display = 'flex';
 
         // Gửi dữ liệu về Google Sheets
         const formData = new URLSearchParams();
-        formData.append('name', document.getElementById('studentName').value.toUpperCase());
+        formData.append('name', studentName);
         formData.append('birthDate', document.getElementById('studentDOB').value);
-        formData.append('khoaThi', document.getElementById('khoaThi').value);
+        formData.append('khoaThi', khoaThi);
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
         formData.append('status', status);
@@ -296,7 +321,14 @@
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData });
 
         let c = 10;
-        setInterval(() => { c--; document.getElementById('countdown').innerText = c; if(c<=0) location.reload(); }, 1000);
+        const countInt = setInterval(() => { 
+            c--; 
+            document.getElementById('countdown').innerText = c; 
+            if(c<=0) {
+                clearInterval(countInt);
+                location.reload();
+            }
+        }, 1000);
     }
 </script>
 </body>
