@@ -130,10 +130,10 @@
  const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
  // Link Web App dùng để kiểm tra mã và nộp bài
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznCTtqg6P7IF0ESNUDwjNLhCDu8wUUrDr2k0tVD7kg-wNkPjPpLzg/exec";
-    let allQuestions = [], selectedQuestions = [], studentAnswers = [];
+     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // Chống gian lận
+    // --- Bảo mật chống chuyển tab ---
     window.onblur = () => { 
         if(!isSubmitted && selectedQuestions.length > 0) { 
             cheatCount++; 
@@ -143,42 +143,35 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
     };
     window.onfocus = () => { document.getElementById('warning-overlay').style.display = 'none'; };
 
-    async function validateAndStart() {
-        const maThi = document.getElementById('maThi').value.trim();
+    async function startQuiz() {
         const name = document.getElementById('studentName').value.trim();
-        if(!name || !maThi) return alert("Vui lòng nhập tên và mã thi!");
-
-        const btn = document.getElementById('btnStart');
-        btn.disabled = true; btn.innerText = "ĐANG KIỂM TRA...";
-
-        try {
-            const res = await fetch(`${WEB_APP_URL}?action=checkCode&code=${maThi}`);
-            const result = await res.json();
-            if(result.isValid) startQuiz();
-            else { alert("Mã thi không đúng!"); btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; }
-        } catch(e) { alert("Lỗi kết nối Server!"); btn.disabled = false; }
-    }
-
-    function startQuiz() {
+        const dob = document.getElementById('studentDOB').value.trim();
+        const code = document.getElementById('examCode').value.trim().toUpperCase();
         const gid = document.getElementById('jobType').value;
+        const jobName = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
+        
+        if(!name || !dob || !code) return alert("Vui lòng nhập đầy đủ thông tin: Họ tên, Ngày sinh và Mã lớp!");
+
         Papa.parse(BASE_CSV_URL + gid, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 allQuestions = results.data.filter(i => i.CauHoi).map(i => ({
                     question: i.CauHoi,
-                    options: [i.A, i.B, i.C, i.D].filter(o => o),
+                    options: [i.A, i.B, i.C, i.D].filter(o => o && o.trim() !== ""),
                     answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
-                    explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
-                    image: i["HINH ANH"] || "" 
+                    explanation: i.Giaithich || "Thực hiện đúng quy trình ATKT."
                 }));
-                
+
+                if(allQuestions.length < 30) return alert("Dữ liệu nguồn không đủ 30 câu hỏi!");
+
+                document.getElementById('display-name').innerText = name.toUpperCase() + " (" + dob + ")";
+                document.getElementById('job-display-header').innerText = jobName;
                 selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
-                document.getElementById('display-name').innerText = document.getElementById('studentName').value.toUpperCase();
-                document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
                 
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('caee-header').style.display = 'flex';
                 document.getElementById('quiz-screen').style.display = 'grid';
+                
                 showQuestion(0);
                 startTimer();
             }
@@ -186,32 +179,31 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
     }
 
     function showQuestion(idx) {
+        if (idx < 0 || idx >= 30 || isSubmitted) return;
         currentQuestionIndex = idx;
         const q = selectedQuestions[idx];
         const stored = studentAnswers.find(a => a.qIndex === idx);
         const isPractice = document.getElementById('modeToggle').checked;
         const labels = ['A', 'B', 'C', 'D'];
 
-        let html = `<h3>Câu ${idx + 1}: ${q.question}</h3>`;
-        if(q.image) html += `<div class="q-image-box"><img src="${q.image}"></div>`;
-
+        let html = `<h3 style="margin-bottom:20px; color:var(--caee-blue);">Câu ${idx + 1}: ${q.question}</h3>`;
         q.options.forEach((opt, i) => {
             let cls = "";
             const isSelected = stored && opt === stored.selected;
-            if(isPractice && stored) {
-                if(labels[i] === q.answer) cls = "correct";
-                else if(isSelected) cls = "wrong";
-            } else if(isSelected) cls = "selected";
+            if (isPractice && stored) {
+                if (labels[i] === q.answer) cls = "correct";
+                else if (isSelected) cls = "wrong";
+            } else if (isSelected) cls = "selected";
 
             html += `<div class="option-item ${cls}" onclick="selectAns(${idx}, '${opt.replace(/'/g, "\\'")}')"><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
 
-        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:10px; border-radius:8px; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
+        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; border-left:5px solid #ffa000; margin-top:10px;"><b>Giải thích:</b> ${q.explanation}</div>`;
         
-        html += `<div style="display:flex; justify-content:space-between; margin-top:20px;">
-                    <button class="btn-start" style="width:45%; background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
-                    <button class="btn-start" style="width:45%; background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
-                 </div>`;
+        html += `<div style="display:flex; justify-content:space-between; margin-top:20px; gap:10px;">
+                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
+                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
+                </div>`;
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
     }
@@ -302,4 +294,5 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
 </script>
 </body>
 </html>
+
 
