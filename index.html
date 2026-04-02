@@ -39,6 +39,7 @@
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2); font-size: 1.1rem;
         }
         .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3); opacity: 0.9; }
+        .btn-start:disabled { background: #ccc; cursor: not-allowed; }
 
         #quiz-screen { padding: 20px; display: none; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: auto; }
         #quiz-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 400px; }
@@ -132,6 +133,7 @@
             <div class="result-header">KẾT QUẢ SÁT HẠCH</div>
             <div style="margin-bottom: 20px; font-size: 1.1rem; line-height: 1.6; text-align: left;">
                 Học viên: <b id="res-name" style="color: var(--caee-blue); text-transform: uppercase;">---</b><br>
+                Ngày sinh: <b id="res-dob">---</b><br>
                 Khóa thi: <b id="res-id">---</b>
             </div>
             <div class="score-circle">
@@ -168,7 +170,7 @@
                     explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
                     image: i["HINH ANH"] || "" 
                 }));
-                console.log("Đã tải " + allQuestions.length + " câu hỏi.");
+                console.log("Data preloaded for GID: " + gid);
             }
         });
     }
@@ -185,28 +187,40 @@
     async function validateAndStart() {
         const maThi = document.getElementById('maThi').value.trim();
         const name = document.getElementById('studentName').value.trim();
-        if(!name || !maThi) return alert("Vui lòng nhập tên và mã thi!");
+        const dob = document.getElementById('studentDOB').value.trim();
+        
+        if(!name || !maThi || !dob) return alert("Vui lòng nhập đầy đủ: Tên, Ngày sinh và Mã thi!");
 
         const btn = document.getElementById('btnStart');
-        btn.disabled = true; btn.innerText = "ĐANG KIỂM TRA...";
+        btn.disabled = true; 
+        btn.innerText = "ĐANG KIỂM TRA...";
 
         try {
             const res = await fetch(`${WEB_APP_URL}?action=checkCode&code=${maThi}`);
             const result = await res.json();
+            
             if(result.isValid) {
                 startQuiz();
             } else { 
                 alert("Mã thi không đúng!"); 
-                btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; 
+                btn.disabled = false; 
+                btn.innerText = "VÀO THI NGAY ➔"; 
             }
         } catch(e) { 
-            alert("Lỗi kết nối Server!"); 
-            btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔";
+            alert("Lỗi kết nối Server! Vui lòng thử lại."); 
+            btn.disabled = false; 
+            btn.innerText = "VÀO THI NGAY ➔";
         }
     }
 
     function startQuiz() {
-        if(allQuestions.length === 0) return alert("Dữ liệu câu hỏi chưa tải xong, vui lòng đợi vài giây!");
+        if(allQuestions.length === 0) {
+            alert("Đang tải dữ liệu, vui lòng đợi trong giây lát...");
+            preloadQuestions();
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStart').innerText = "VÀO THI NGAY ➔";
+            return;
+        }
         
         selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
         const stName = document.getElementById('studentName').value.toUpperCase();
@@ -294,10 +308,12 @@
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
         const studentName = document.getElementById('studentName').value.toUpperCase();
+        const studentDOB = document.getElementById('studentDOB').value;
         const khoaThi = document.getElementById('khoaThi').value;
 
-        // Cập nhật thông tin lên màn hình kết quả
+        // HIỂN THỊ THÔNG TIN RA MÀN HÌNH KẾT QUẢ
         document.getElementById('res-name').innerText = studentName;
+        document.getElementById('res-dob').innerText = studentDOB;
         document.getElementById('res-id').innerText = khoaThi;
         document.getElementById('res-score').innerText = score;
         document.getElementById('res-badge').innerText = status;
@@ -310,7 +326,7 @@
         // Gửi dữ liệu về Google Sheets
         const formData = new URLSearchParams();
         formData.append('name', studentName);
-        formData.append('birthDate', document.getElementById('studentDOB').value);
+        formData.append('birthDate', studentDOB);
         formData.append('khoaThi', khoaThi);
         formData.append('jobName', document.getElementById('job-display-header').innerText);
         formData.append('score', score);
