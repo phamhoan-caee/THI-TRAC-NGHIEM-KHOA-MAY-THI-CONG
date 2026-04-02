@@ -72,6 +72,7 @@
 
     <div class="caee-header" id="caee-header">
         <div style="flex-grow: 1; text-align: center;">
+             <div style="font-weight: bold; font-size: 14px;">TRƯỜNG CAO ĐẲNG CƠ ĐIỆN NÔNG NGHIỆP VÀ MÔI TRƯỜNG</div>
             <div id="job-display-header" style="font-weight: bold; font-size: 14px; color: #ffd700;">ĐANG TẢI...</div>
             <div style="font-size: 13px;">HỌC VIÊN: <span id="display-name" style="font-weight: bold;">---</span></div>
         </div>
@@ -256,7 +257,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9hZiR4jQGnxJ6WznC
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
         
-        // Cập nhật màn hình kết quả
+       // Cập nhật màn hình kết quả
         document.getElementById('res-name').innerText = document.getElementById('studentName').value.toUpperCase() + " (" + document.getElementById('studentDOB').value + ")";
         document.getElementById('res-id').innerText = document.getElementById('examCode').value.toUpperCase();
         document.getElementById('res-score').innerText = score;
