@@ -307,13 +307,13 @@
         });
 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
-        const studentName = document.getElementById('studentName').value.toUpperCase();
-        const studentDOB = document.getElementById('studentDOB').value;
+        const name = document.getElementById('studentName').value.toUpperCase();
+        const dob = document.getElementById('studentDOB').value; // Lấy giá trị ngày sinh học viên nhập
         const khoaThi = document.getElementById('khoaThi').value;
 
         // HIỂN THỊ THÔNG TIN RA MÀN HÌNH KẾT QUẢ
-        document.getElementById('res-name').innerText = studentName;
-        document.getElementById('res-dob').innerText = studentDOB;
+        document.getElementById('res-name').innerText = name;
+        document.getElementById('res-dob').innerText = dob; // THÊM DÒNG NÀY ĐỂ HIỆN NGÀY SINH
         document.getElementById('res-id').innerText = khoaThi;
         document.getElementById('res-score').innerText = score;
         document.getElementById('res-badge').innerText = status;
