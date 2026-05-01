@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HỆ THỐNG TRẮC NGHIỆM NGHỀ KHOA MÁY THI CÔNG - CAEE</title>
+    <title>ÔN TẬP/THI TRẮC NGHIỆM NGHỀ KHOA MÁY THI CÔNG - CAEE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
@@ -123,12 +123,12 @@
             <select id="jobType" class="form-control" style="font-weight: bold;" onchange="preloadQuestions()">
                 <option value="1538604642">NGHỀ: VẬN HÀNH XE NÂNG HÀNG</option>
                 <option value="798209567">NGHỀ: VẬN HÀNH CẦN TRỤC</option>
-                <option value="1969781180NGHỀ: VẬN HÀNH CẦU TRỤC</option>
+                <option value="1969781180">NGHỀ: VẬN HÀNH CẦU TRỤC</option>
             </select>
             <input type="text" id="studentName" placeholder="HỌ VÀ TÊN HỌC VIÊN" class="form-control" style="text-transform: uppercase;">
             <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control">
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="khoaThi" value="KHÓA: Tháng 6/2026" class="form-control" style="flex: 1.5; background: #eee; font-weight: bold;" readonly>
+                <input type="text" id="khoaThi" value="Tháng 6/2026" class="form-control" style="flex: 1.5; background: #eee; font-weight: bold;" readonly>
                 <input type="password" id="maThi" placeholder="Mã thi" class="form-control" style="flex: 1;">
             </div>
             <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:8px;">
@@ -171,8 +171,8 @@
     </div>
 
 <script>
-    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7h1KNottkL2N-DEBjkUVVlXLblXy25_x1UhqML8WQz3AWeWeXFuvkSQUb4Sxv5eaK5T-VJQEWh4wB/pub?output=csv&gid=";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyoAVdE_SixJLvOCIlnbCyUtFxcjEHb6lut72yGdBpomAJNttm1F87uOFG0w0d4dxbv/exec";
+    const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMckN5OZdg89-VQn-vnXL21uR67RWl-4rlQ18wc1-UFteqI7qwFE5-BkQ_pT3b-OvoTl9Ekaq7wf2N/pub?output=csv&gid=";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwzqN3xNCMbg2cCOViEJr0vogIf-irFmMa_q5iGVBpbZeE1KTL9ifoDZ-3UaeHna94/exec";
     
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
@@ -344,6 +344,7 @@
             else { clearInterval(cdInterval); location.reload(); }
         }, 1000);
     }
+
     // Giám sát rời màn hình
     window.onblur = () => { if(!isSubmitted && selectedQuestions.length > 0) { cheatCount++; document.getElementById('warning-overlay').style.display = 'flex'; document.getElementById('cheat-count-msg').innerText = `Lần vi phạm: ${cheatCount} / 3`; if (cheatCount >= 3) submitQuiz(true); } };
     window.onfocus = () => { if (cheatCount < 3) setTimeout(() => { document.getElementById('warning-overlay').style.display = 'none'; }, 500); };
